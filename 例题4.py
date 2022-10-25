@@ -1,34 +1,47 @@
 class Solution:
-    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
-        #基本思路就是转换
-        #将一维数组里面的索引转换成这个矩阵里面的位置即可。
-        #转换函数，将一维数组里的索引转换成二维矩阵中的索引即可。
-        def convert(i,n):
-            x,y = divmod(i,n)[0],divmod(i,n)[1]
-            return [x,y]
+    def solveNQueens(self, n: int) -> List[List[str]]:
+        #本质上可以看作是一个求一个n维的数组col（代表n行中棋子所在的列的索引），这个数组里的数的值为0~(n-1)，且互不相同（不能在同一列）
+        #更进一步的，因为不能在同一斜线上，
+        #维护一个lurd = [] 如果是从左上到右下的斜线,则colIndex - i not in lurd
+        #维护一个rpld = [] 如果是从右上到左下的斜线,则colIndex + i not in rpld
+        #因此本质上是求一个满足以上两个约束的n维向量搜索空间
+        #采用回溯法
+        self.res = []
+        #同时，要用如下函数将这个n维的向量转换成题目所需要的答案的形式
+        def trans(ls,ans):
+            for i in range(n):
+                row=""
+                for j in range(n):
+                    if j==ls[i]:
+                        row+="Q"
+                    else:
+                        row+="."
+                ans.append(row)
 
-        m = len(matrix)
-        n = len(matrix[0])
-        #确定左右边界
-        left, right = 0, m*n-1
-        #确定退出条件，注意这个地方退出后，left和right的关系可能错位，需要分情况讨论
-        while left<right:
-            mid = left + (right-left)//2
-            x1,y1 = convert(mid,n)[0],convert(mid,n)[1]
-            print(x1,y1)
-            x2,y2 = convert(right,n)[0],convert(right,n)[1]
-            #确定边界缩小规则
-            if matrix[x1][y1]<target:
-                left = mid+1
-            elif matrix[x1][y1]>target:
-                right = mid-1
-            else:
-                #锁定答案位置
-                return True
-    
-        #锁定答案位置
-        mid = left + (right-left)//2
-        x1,y1 = convert(mid,n)[0],convert(mid,n)[1]
-        if left == right:
-            return True if matrix[x1][y1] == target else False
-        return False 
+        
+        temp = []
+        lurd = []
+        rpld = []
+        def backTrack(i,temp,lurd,rpld):
+            if i == n:
+                ans = []
+                trans(temp,ans)
+                self.res.append(ans)
+            for colIndex in range(n):
+                #满足约束
+                if colIndex not in temp and colIndex - i not in lurd and colIndex + i not in rpld:
+                    #做搜索选择
+                    temp.append(colIndex)
+                    lurd.append(colIndex-i)
+                    rpld.append(colIndex+i)
+                    #深一层级搜索
+                    backTrack(i+1,temp,lurd,rpld)
+                    #撤销搜索选择
+                    temp.pop()
+                    lurd.pop()
+                    rpld.pop()
+                else:
+                    #这一列不行就看下一列行不行
+                    continue
+        backTrack(0,temp,lurd,rpld)
+        return self.res
